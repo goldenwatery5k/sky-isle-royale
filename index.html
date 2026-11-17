@@ -1617,6 +1617,7 @@ function takeDestroyer(){if(destroyerState!=='safe')return;const res=giveItem(me
   if(res===false){bigMsg('Inventory full! Select a slot to swap.');return}if(res!==true)dropItems(me,[res]);
   destroyerState='taken';SAFE.gun.visible=false;SAFE.light.intensity=0;netSend({t:'dtaken'});bigMsg('🔥 YOU GOT THE EXOTIC DESTROYER! 10,000 damage · 5,000 bullets! 🔥');sfx('unlock')}
 function nearestInteract(){let best=null,bd=2.7*2.7;
+  if(SPACE){const ti=nearTank(me);if(ti>=0)return{type:'tank',i:ti}}
   if(ACID.btn&&Math.hypot(me.pos.x-ACID.btn.x,me.pos.z-ACID.btn.z)<2.6&&Math.abs(me.pos.y-ACID.btn.y)<2)return{type:'acid'};
   if(TRAIN.btn&&Math.hypot(me.pos.x-TRAIN.btn.x,me.pos.z-TRAIN.btn.z)<2.4&&Math.abs(me.pos.y-TRAIN.btn.y)<2.5)return{type:'trainbtn'};
   if(MODE==='super'&&SUPER.tp&&Math.hypot(me.pos.x-SUPER.tp.x,me.pos.z-SUPER.tp.z)<2.8&&Math.abs(me.pos.y-SUPER.tp.y)<2.5)return{type:'tpbtn'};
@@ -1632,7 +1633,7 @@ function nearestInteract(){let best=null,bd=2.7*2.7;
   if(SAFE&&destroyerState==='safe'&&safeOpen){const d=Math.hypot(SAFE.gx-me.pos.x,SAFE.gz-me.pos.z);if(d<3.4&&Math.abs(SAFE.y-me.pos.y)<2.5)best={type:'destroyer'}}
   if(!best||best.type!=='destroyer'){let vb=1e9;for(const v of VEH){if(!v.alive)continue;const d=Math.hypot(v.pos.x-me.pos.x,v.pos.z-me.pos.z);if(d<v.def.enter&&Math.abs(v.pos.y-me.pos.y)<7&&d<vb&&(!best||d<2)){vb=d;best={type:'veh',v}}}}
   return best}
-function interact(){if(me.phase==='veh'){exitVehicle(me);return}const t=nearestInteract();if(!t)return;if(t.type==='safe'){openSafe();return}if(t.type==='safeclose'){closeSafe(true);return}if(t.type==='acid'){setAcid(!ACID.on,true);return}if(t.type==='titanbtn'){pressTitan();return}if(t.type==='armybtn'){pressArmy();return}if(t.type==='banbtn'){openBan();return}if(t.type==='codepanel'){openCodePanel();return}if(t.type==='tpbtn'){superTeleport();return}if(t.type==='trainbtn'){if(TRAIN.cd>0){bigMsg(`🚂 The train is coming — wait ${Math.ceil(TRAIN.cd)}s`);return}callTrain(true);return}if(t.type==='bell'){ringBell(t.w,true);return}if(t.type==='dcar'){const v=activateDormant(t.i,true);if(v)enterVehicle(v);return}if(t.type==='veh'){enterVehicle(t.v);return}if(t.type==='loot')pickupLoot(me,t.l);else if(t.type==='chest')openChest(t.c.id,true);else takeDestroyer()}
+function interact(){if(me.phase==='veh'){exitVehicle(me);return}const t=nearestInteract();if(!t)return;if(t.type==='tank'){takeTank(t.i,me);return}if(t.type==='safe'){openSafe();return}if(t.type==='safeclose'){closeSafe(true);return}if(t.type==='acid'){setAcid(!ACID.on,true);return}if(t.type==='titanbtn'){pressTitan();return}if(t.type==='armybtn'){pressArmy();return}if(t.type==='banbtn'){openBan();return}if(t.type==='codepanel'){openCodePanel();return}if(t.type==='tpbtn'){superTeleport();return}if(t.type==='trainbtn'){if(TRAIN.cd>0){bigMsg(`🚂 The train is coming — wait ${Math.ceil(TRAIN.cd)}s`);return}callTrain(true);return}if(t.type==='bell'){ringBell(t.w,true);return}if(t.type==='dcar'){const v=activateDormant(t.i,true);if(v)enterVehicle(v);return}if(t.type==='veh'){enterVehicle(t.v);return}if(t.type==='loot')pickupLoot(me,t.l);else if(t.type==='chest')openChest(t.c.id,true);else takeDestroyer()}
 function closeSafe(local){if(!safeOpen)return;safeOpen=false;addCol(SAFE.doorCol);sfx('build');if(local){netSend({t:'vault',o:0});bigMsg('🔒 Vault door closed.')}}
 function openSafeNet(){if(safeOpen)return;safeOpen=true;remCol(SAFE.doorCol)}
 function openSafe(){if(safeOpen||!isVaultAdmin())return;safeOpen=true;remCol(SAFE.doorCol);sfx('unlock');netSend({t:'vault',o:1});bigMsg('🔓 Vault opened! Walk in for THE DESTROYER, the 🌀 TELEPORT ORB and the ✨ MYTHICAL CHEST!')}
@@ -2621,7 +2622,7 @@ function hudUpdate(dt){if(!(me&&me.phase==='veh'&&me.vehId==='titan'))titanLockU
   const hp=Math.max(0,Math.round(me.hp));const hpf=hp/me.maxHp;$('hpFill').style.width=(hpf*100)+'%';$('hpFill').style.background=hpf>.5?'linear-gradient(#7dff6a,#2fbf2f)':hpf>.25?'linear-gradient(#ffe46a,#d9a62f)':'linear-gradient(#ff7a6a,#c92f2f)';$('hpTxt').textContent=`❤️ ${hp} / ${me.maxHp}`;
   const pr=me.alive&&me.phase==='ground'?nearestInteract():null;
   vehHud(pr);const pe=$('prompt');
-  if(pr){pe.style.display='block';pe.innerHTML=pr.type==='loot'?(canTake(me,pr.l.item)?'<kbd>E</kbd> Pick up ':'🔒 You can\'t pick up ')+(iconKey(pr.l.item)?`<img src="${itemIcon(iconKey(pr.l.item))}">`:'')+itemName(pr.l.item):pr.type==='dcar'?'<kbd>E</kbd> Drive the 🚗 Car':pr.type==='bell'?'<kbd>E</kbd> Ring the village bell 🔔':pr.type==='safe'?'<kbd>E</kbd> Open the vault 🔓':pr.type==='tpbtn'?'<kbd>E</kbd> 🌀 Teleport into the arena':pr.type==='codepanel'?'<kbd>E</kbd> 🔐 Type a code into the panel':pr.type==='trainbtn'?'<kbd>E</kbd> 🚂 Spawn the train at Sky Castle Station':pr.type==='banbtn'?(isAdmin()?'<kbd>E</kbd> 🚫 BAN A PLAYER OR BOT':'🔒 Locked button'):pr.type==='armybtn'?(isAdmin()?'<kbd>E</kbd> 🪖 TAKE COMMAND OF EVERY GUARD & SOLDIER':'🔒 Locked button'):pr.type==='titanbtn'?(isAdmin()?'<kbd>E</kbd> 🦾 DEPLOY THE TITAN MECH':'🔒 Locked button'):pr.type==='acid'?(ACID.on?'<kbd>E</kbd> Stop the ☣️ acid rain':'<kbd>E</kbd> Unleash ☣️ ACID RAIN (hurts bots outside)'):pr.type==='safeclose'?'<kbd>E</kbd> Close the vault door 🔒':pr.type==='veh'?vehPrompt(pr.v):pr.type==='chest'?(pr.c.kind==='mythic'?'<kbd>E</kbd> Open <b style="color:#d18bff">✨ MYTHICAL CHEST ✨</b>':pr.c.kind==='diamond'?'<kbd>E</kbd> Open <b style="color:#7fe7ff">💎 DIAMOND CHEST</b>':'<kbd>E</kbd> Open chest 📦'):'<kbd>E</kbd> Take <b style="color:#2ef2ff">EXOTIC</b> <b style="color:#ff4a4a">THE DESTROYER</b> (10,000 damage!)'}else pe.style.display='none';
+  if(pr){pe.style.display='block';pe.innerHTML=pr.type==='loot'?(canTake(me,pr.l.item)?'<kbd>E</kbd> Pick up ':'🔒 You can\'t pick up ')+(iconKey(pr.l.item)?`<img src="${itemIcon(iconKey(pr.l.item))}">`:'')+itemName(pr.l.item):pr.type==='dcar'?'<kbd>E</kbd> Drive the 🚗 Car':pr.type==='bell'?'<kbd>E</kbd> Ring the village bell 🔔':pr.type==='safe'?'<kbd>E</kbd> Open the vault 🔓':pr.type==='tpbtn'?'<kbd>E</kbd> 🌀 Teleport into the arena':pr.type==='codepanel'?'<kbd>E</kbd> 🔐 Type a code into the panel':pr.type==='trainbtn'?'<kbd>E</kbd> 🚂 Spawn the train at Sky Castle Station':pr.type==='tank'?'<kbd>E</kbd> 🫧 Take oxygen tank (+500 O₂)':pr.type==='banbtn'?(isAdmin()?'<kbd>E</kbd> 🚫 BAN A PLAYER OR BOT':'🔒 Locked button'):pr.type==='armybtn'?(isAdmin()?'<kbd>E</kbd> 🪖 TAKE COMMAND OF EVERY GUARD & SOLDIER':'🔒 Locked button'):pr.type==='titanbtn'?(isAdmin()?'<kbd>E</kbd> 🦾 DEPLOY THE TITAN MECH':'🔒 Locked button'):pr.type==='acid'?(ACID.on?'<kbd>E</kbd> Stop the ☣️ acid rain':'<kbd>E</kbd> Unleash ☣️ ACID RAIN (hurts bots outside)'):pr.type==='safeclose'?'<kbd>E</kbd> Close the vault door 🔒':pr.type==='veh'?vehPrompt(pr.v):pr.type==='chest'?(pr.c.kind==='mythic'?'<kbd>E</kbd> Open <b style="color:#d18bff">✨ MYTHICAL CHEST ✨</b>':pr.c.kind==='diamond'?'<kbd>E</kbd> Open <b style="color:#7fe7ff">💎 DIAMOND CHEST</b>':'<kbd>E</kbd> Open chest 📦'):'<kbd>E</kbd> Take <b style="color:#2ef2ff">EXOTIC</b> <b style="color:#ff4a4a">THE DESTROYER</b> (10,000 damage!)'}else pe.style.display='none';
   if(!pr&&me.alive&&me.phase==='ground'){const so=nearestHireable();if(so){pe.style.display='block';pe.innerHTML=`<kbd>M</kbd> Hire this 🪖 soldier — 250 HP, Epic ${GUN[so.inv[1].g].n}`}}
   if(me.heal){const it=me.inv[me.heal.slot];if(it){const hd=HEALS[it.h];$('healBar').style.display='block';$('healFill').style.width=(me.heal.t/hd.time*100)+'%';$('healTxt').textContent='Using '+hd.n+'...'}}
   else if(me.reload>0){const it=me.inv[me.sel];$('healBar').style.display='block';$('healFill').style.width=((1-me.reload/GUN[it.g].rl)*100)+'%';$('healTxt').textContent='Reloading...'}else $('healBar').style.display='none';
@@ -3043,6 +3044,9 @@ function buildTanks(){
   for(const im of[TANK_IM,TANK_CAP]){im.frustumCulled=false;scene.add(im)}
 }
 let tankT=0;
+function nearTank(e){let bi=-1,bd=2.7;for(let i=0;i<TANKS.length;i++){const t=TANKS[i];if(!t.on)continue;const d=Math.hypot(e.pos.x-t.x,e.pos.z-t.z);if(d<bd&&Math.abs(e.pos.y-t.y)<3){bd=d;bi=i}}return bi}
+function takeTank(i,e){const t=TANKS[i];if(!t||!t.on)return;t.on=false;e.o2=Math.min(1000,e.o2+500);const m=new THREE.Matrix4().makeScale(0,0,0);TANK_IM.setMatrixAt(i,m);TANK_CAP.setMatrixAt(i,m);TANK_IM.instanceMatrix.needsUpdate=TANK_CAP.instanceMatrix.needsUpdate=true;
+  if(e===me){try{sfx('pickup')}catch(_){}bigMsg('🫧 Oxygen tank! +500 O₂')}}
 function o2Update(dt){if(!SPACE)return;
   for(const e of ents.values()){if(!e.alive||e.owner!==NET.myId)continue;
     if(o2Inf(e)){e.o2=1000;continue}
@@ -3052,7 +3056,7 @@ function o2Update(dt){if(!SPACE)return;
   tankT-=dt;if(tankT>0)return;tankT=.2;
   const m=new THREE.Matrix4().makeScale(0,0,0);
   for(let i=0;i<TANKS.length;i++){const t=TANKS[i];if(!t.on)continue;
-    for(const e of ents.values()){if(!e.alive||e.owner!==NET.myId||e.phase!=='ground'||o2Inf(e)||e.o2>940)continue;
+    for(const e of ents.values()){if(!e.alive||e===me||e.owner!==NET.myId||e.phase!=='ground'||o2Inf(e)||e.o2>940)continue;
       if(Math.abs(e.pos.x-t.x)<2.2&&Math.abs(e.pos.z-t.z)<2.2&&Math.abs(e.pos.y-t.y)<3){t.on=false;e.o2=Math.min(1000,e.o2+500);TANK_IM.setMatrixAt(i,m);TANK_CAP.setMatrixAt(i,m);TANK_IM.instanceMatrix.needsUpdate=TANK_CAP.instanceMatrix.needsUpdate=true;
         if(e===me){try{sfx('pickup')}catch(_){}bigMsg('🫧 Oxygen tank! +500 O₂')}break}}}
 }
@@ -3072,7 +3076,7 @@ function summonCats(){if(!me||!me.alive||me.cool>0)return;me.cool=1.2;me.swing=1
   for(let i=0;i<10;i++){const a=i/10*Math.PI*2,x=me.pos.x+Math.cos(a)*3.5,z=me.pos.z+Math.sin(a)*3.5,y=floorAt(x,me.pos.y+3,z),id='cat'+(CAT_SEQ++);
     const e=new Ent(id,'🐱 Cat',CAT_SKIN,NET.myId,true);e.mats=0;e.inv=[null,gunItem('smg_c'),null,null,null,null];e.sel=1;e.phase='ground';e.cat=true;e.mesh.scale.setScalar(.65);
     e.soldier={hirer:me.id,home:new V3(x,y,z),idx:i,scan:Math.random()*.3,enemy:null,order:null,stuckT:0,stuckN:0,detourT:0,detourA:0,side:1,last:new V3()};
-    e.maxHp=e.hp=300;e.pos.set(x,y,z);e.netT.copy(e.pos);e.got=true;ents.set(id,e)}
+    e.maxHp=e.hp=200;e.pos.set(x,y,z);e.netT.copy(e.pos);e.got=true;ents.set(id,e)}
   try{sfx('swing')}catch(_){}bigMsg('🐱 10 cats pounce into battle!')}
 
 const clock=new THREE.Clock();
