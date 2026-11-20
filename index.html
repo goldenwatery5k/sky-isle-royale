@@ -3945,6 +3945,12 @@ function toonify(e){if(!GLB.Toon||!e||!e.mesh||e.toon)return;const u=e.mesh.user
     switch(sk.acc){case'cap':P(8.6,2,8.6,0,4+3.6,0);P(8,.6,4,0,4+2.9,-5.5);break;case'helmet':case'hood':P(9,3.6,9,0,4+3.4,0);P(9,1,2,0,4+1.8,-4);break;case'visor':P(8.4,1.6,1,0,4+.6,-4.3);break;
       case'crown':P(8.4,1.6,8.4,0,4+4.8,0);for(const sx of[-1,1])for(const sz of[-1,1])P(1.2,1.6,1.2,sx*3.4,4+6,sz*3.4);break;case'horns':for(const sx of[-1,1])P(1.4,2.6,1.4,sx*3,4+5.2,0);break;
       case'tophat':P(11,.6,11,0,4+4.4,0);P(7,5,7,0,4+7,0);break;case'band':P(8.5,1,8.5,0,4+1.7,0);break;case'mask':P(8.4,3,1,0,4-2,-4.3);break}}
+  // helmet: the original blocky characters all wore a glass space helmet — keep it on the Blender characters too
+  {const hc=4*BU,gl=new THREE.Mesh(new THREE.SphereGeometry(6.4*BU,28,18),new THREE.MeshStandardMaterial({color:'#bfe6ff',transparent:true,opacity:.22,roughness:.04,metalness:.1,depthWrite:false,envMapIntensity:1.4}));gl.position.set(0,hc+.3*BU,0);gl.renderOrder=2;u.head.add(gl);
+    const mt=new THREE.MeshStandardMaterial({color:'#c8d0da',roughness:.35,metalness:.7}),cl=new THREE.Mesh(new THREE.CylinderGeometry(4.9*BU,5.2*BU,1.5*BU,24),mt);cl.position.set(0,hc-4.2*BU,0);cl.castShadow=true;u.head.add(cl);
+    const rg=new THREE.Mesh(new THREE.TorusGeometry(5.1*BU,.35*BU,8,24),new THREE.MeshStandardMaterial({color:'#8a949e',roughness:.3,metalness:.8}));rg.rotation.x=Math.PI/2;rg.position.set(0,hc-3.5*BU,0);u.head.add(rg);
+    for(const sx of[-1,1]){const cp=new THREE.Mesh(BOX,new THREE.MeshStandardMaterial({color:'#8a949e',roughness:.35,metalness:.7}));cp.scale.set(1.4*BU,2*BU,1.4*BU);cp.position.set(sx*5.2*BU,hc-3.4*BU,0);u.head.add(cp)}
+    const hl=new THREE.Mesh(new THREE.SphereGeometry(6.45*BU,16,10,.3,1.1,.2,.9),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.1,depthWrite:false,blending:THREE.AdditiveBlending}));hl.position.copy(gl.position);hl.rotation.y=-.5;u.head.add(hl)}
   e.toon=true}
 // ---- world-space textured walls / carpet / door (procedural canvas textures) ----
 function twCanvas(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t}
