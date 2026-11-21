@@ -3981,8 +3981,9 @@ function plEnter(){if(PL.on||SH.fly||SH.over)return;const P=SH.planets[SH.cur],t
   // space car (1.5x the speed of the 100-bots car)
   plSpawnCar();
   me.pos.set(0,0,10.5);me.vel.set(0,0,0);me.netT.copy(me.pos);me.yaw=0;
+  for(let i=0;i<30;i++)plSpawnMob('mon');
   $('mapWrap').style.display='block';
-  bigMsg('🌍 Welcome to '+P.name+'! Kill 👾 aliens & monsters for 25🪙 each · 🏘️ 7 villages sell ⛽ fuel & 🍖 food · <b>M</b> = map');SH.hudT=0}
+  bigMsg('🌍 Welcome to '+P.name+'! Kill 👾 aliens & 30 👹 monsters for 25🪙 each · 🏘️ 7 villages sell ⛽ fuel & 🍖 food · <b>M</b> = map');SH.hudT=0}
 function plSpawnCar(){plRemoveCar();const oc=CAR_COL_OVERRIDE;CAR_COL_OVERRIDE='#3ac8ff';const v=addVehicle('car',9,0,12,Math.PI*.9,'plcar'+(PL.carN++));CAR_COL_OVERRIDE=oc;
   v.spdK=1.5;v.fuel=PL.carFuel;v.space=true;if(v.lbl)v.lbl.material.map=textSprite('🚗 SPACE CAR (x1.5)','#fff','rgba(0,0,0,.5)',28,360,56).material.map;PL.car=v}
 function plRemoveCar(){const v=PL.car;if(!v)return;PL.carFuel=v.fuel;if(me&&me.phase==='veh'&&me.vehId===v.id)exitVehicle(me);scene.remove(v.m.g);const i=VEH.indexOf(v);if(i>=0)VEH.splice(i,1);delete VEHMAP[v.id];shootables=shootables.filter(o=>!(o.userData&&o.userData.veh===v));PL.car=null}
@@ -4035,7 +4036,7 @@ function updateAlien(b,dt){const B=b.boss,mon=B.mon;tickTimers(b,dt);B.cd-=dt;B.
   else{const dx=B.home.x-b.pos.x,dz=B.home.z-b.pos.z,d=Math.hypot(dx,dz);if(d>14){mx=dx/d*.5;mz=dz/d*.5}}
   const sp=mon?9:7;b.vel.x=mx*sp;b.vel.z=mz*sp;if(!b.onGround)b.vel.y-=32*dt;else b.vel.y=0;moveEntity(b,dt)}
 function plUpdate(dt){PL.mobs=PL.mobs.filter(m=>{if(!m.alive&&m.deadT>2.5){if(ents.has(m.id))removeEnt(m);return false}return ents.has(m.id)});
-  PL.spawnT-=dt;if(PL.spawnT<=0){PL.spawnT=2;const al=PL.mobs.filter(m=>m.alive&&!m.boss.mon).length,mo=PL.mobs.filter(m=>m.alive&&m.boss.mon).length;if(al<12)plSpawnMob('al');else if(mo<4)plSpawnMob('mon')}}
+  PL.spawnT-=dt;if(PL.spawnT<=0){PL.spawnT=2;const al=PL.mobs.filter(m=>m.alive&&!m.boss.mon).length,mo=PL.mobs.filter(m=>m.alive&&m.boss.mon).length;if(mo<30){for(let i=0;i<Math.min(3,30-mo);i++)plSpawnMob('mon')}else if(al<12)plSpawnMob('al')}}
 // ---------- overlay UI ----------
 function shHdr(){return `<div style="display:flex;gap:14px;flex-wrap:wrap;font-weight:800;margin:6px 0 10px;font-size:15px">🪙 ${SH.coins} · ⛽ ${Math.floor(SH.fuel)}/${SH.maxFuel} · 🍖 ${Math.ceil(SH.food)}/1000 · 🥫 ${SH.rations} rations · 🌍 ${SH.visited.size}/100</div>`}
 function shOpen(kind){shClearIv();SH.mi=null;SH.ui=kind;document.exitPointerLock&&document.exitPointerLock();for(const k in keys)keys[k]=false;$('shUI').style.display='flex';shRender()}
