@@ -1688,11 +1688,11 @@ function handleDeath(m){
 }
 function deadAnim(e,dt){e.deadT+=dt;const u=e.mesh.userData;if(e.deadT<1.2){u.rig.rotation.x=lerp(u.rig.rotation.x,-Math.PI/2,dt*6);u.glider.visible=false;e.mesh.position.y=e.pos.y-.6*Math.min(1,e.deadT*3)}else e.mesh.visible=false}
 
-function startReload(e){const it=e.inv[e.sel];if(!it||it.k!=='gun'||e.reload>0)return;if(MODE==='tower'){if(it.a>=10)return;e.reload=GUN[it.g].rl;e.reloadItem=it;return}if(it.g==='crossbow'){if(e===me&&it.a<=0)bigMsg('🏹 The crossbow is out of bolts — it only ever had 1!');return}if(it.a>=GUN[it.g].mag)return;e.reload=GUN[it.g].rl;e.reloadItem=it}
+function startReload(e){const it=e.inv[e.sel];if(!it||it.k!=='gun'||e.reload>0)return;if(MODE==='tower'){if(it.a>=GUN[it.g].mag)return;e.reload=GUN[it.g].rl;e.reloadItem=it;return}if(it.g==='crossbow'){if(e===me&&it.a<=0)bigMsg('🏹 The crossbow is out of bolts — it only ever had 1!');return}if(it.a>=GUN[it.g].mag)return;e.reload=GUN[it.g].rl;e.reloadItem=it}
 function startHeal(e){const it=e.inv[e.sel];if(!it||it.k!=='heal'||e.heal)return;if(e.hp>=e.maxHp){if(e===me)bigMsg('Already at full health!');return}e.heal={slot:e.sel,t:0}}
 function tickTimers(e,dt){
   e.cool-=dt;e.orbCd=(e.orbCd||0)-dt;
-  if(e.reload>0){e.reload-=dt;if(e.reload<=0){const it=e.inv[e.sel];if(it&&it===e.reloadItem)it.a=MODE==='tower'?10:GUN[it.g].mag;e.reload=0}}
+  if(e.reload>0){e.reload-=dt;if(e.reload<=0){const it=e.inv[e.sel];if(it&&it===e.reloadItem)it.a=GUN[it.g].mag;e.reload=0}}
   if(e.heal){const it=e.inv[e.heal.slot];if(e.sel!==e.heal.slot||!it||it.k!=='heal')e.heal=null;
     else{e.heal.t+=dt;const hd=HEALS[it.h];if(e.heal.t>=hd.time){e.hp=Math.min(e.maxHp,e.hp+hd.amt);it.c--;if(it.c<=0)e.inv[e.heal.slot]=null;e.heal=null;if(e===me)sfx('heal')}}}}
 function selectSlot(e,i){if(e.sel===i&&!(e===me&&buildType))return;e.sel=i;e.reload=0;e.heal=null;if(e===me)buildType=null}
@@ -3614,7 +3614,7 @@ function genTower(floor){clearTower();const rng=mulberry32(floor*7919+TW.seed),G
   {const el=new THREE.PointLight(0x66ff99,1.6,45,2);el.position.set(0,H-3,half-10);TW.group.add(el)}
   TW.hides=[];for(let i=0;i<G*G;i++){if(i===ei)continue;const c=cell(i);for(let t=0;t<8;t++){const x=c.x+(rng()-.5)*20,z=c.z+(rng()-.5)*20;if(TW.mach.some(m=>Math.hypot(m.x-x,m.z-z)<6))continue;if(query(x-2,z-2,x+2,z+2).some(k=>k.minX<x+1.8&&k.maxX>x-1.8&&k.minZ<z+1.8&&k.maxZ>z-1.8))continue;const c1=tBox(x,0,z,2.4,2.6,2.4,'#2f8f8f'),c2=tBox(x,2.6,z,2.6,.3,2.6,'#6fd0c8');const Lk=glbGet('Locker');if(Lk){c1.visible=false;c2.visible=false;Lk.position.set(x,0,z);if(rng()<.5)Lk.rotation.y=Math.PI;TW.group.add(Lk)}TW.hides.push({x,z,by:null});break}}
   TW.btn={x:10.5,z:half-2.6};tBox(TW.btn.x,0,TW.btn.z,.9,1.3,.9,'#d02020');{const bl=textSprite(isFull()?'🔘 SKIP':'🔒 SKIP','#ff9a9a','rgba(0,0,0,.7)',30,260,56);bl.position.set(TW.btn.x,2.4,TW.btn.z);TW.group.add(bl)}
-  for(let k=0;k<5;k++){const c=cell(rooms[6+k]||rooms[k]),gx=c.x+(rng()-.5)*12,gz=c.z+(rng()-.5)*12,it=gunItem(rollGun(rng,W_FLOOR));it.a=10;spawnLoot('twg'+floor+'_'+k,it,gx,.45,gz)}
+  for(let k=0;k<5;k++){const c=cell(rooms[6+k]||rooms[k]),gx=c.x+(rng()-.5)*12,gz=c.z+(rng()-.5)*12,it=gunItem(rollGun(rng,W_FLOOR));spawnLoot('twg'+floor+'_'+k,it,gx,.45,gz)}
   TW.spawn.set(0,0,half-27);TW.cell=cell;TW.allRooms=allRooms;TW.chaser=null;TW.lastRoom=-1;TW.cd=null;TW.closing=0;TW.reopen=0;TW.lastSec=-1;
   TW.adj=Array.from({length:G*G},()=>[]);for(const e of TW.edges){if(e.gap===null)continue;const line=(e.k-G/2)*RS;let a,b,x,z;if(e.ax===0){a=e.r*G+e.k-1;b=e.r*G+e.k;x=line;z=e.gap}else{a=(e.k-1)*G+e.r;b=e.k*G+e.r;x=e.gap;z=line}TW.adj[a].push({to:b,x,z});TW.adj[b].push({to:a,x,z})}
   if(TW.bots)placeBots();
@@ -3627,7 +3627,7 @@ function genTower(floor){clearTower();const rng=mulberry32(floor*7919+TW.seed),G
   buildMinimapImage()}
 function towerStart(){document.body.classList.add('cabin');scene.background=new THREE.Color(0x0a0c12);scene.fog=new THREE.FogExp2(0x07131c,.013);SKY.visible=false;$('mapWrap').style.display='none';bigMapOn=false;hemi.intensity=.7;hemi.color.set(0x5b8ae0);hemi.groundColor&&hemi.groundColor.set(0x3a2418);sun.intensity=.12;if(grassMesh)grassMesh.visible=false;
   TW.floor=1;TW.over=false;TW.seed=SEED;TW.out=false;TW.shield=0;TW.rew=null;me.hid=null;me.team='A';if(!TW.pl){TW.pl=new THREE.PointLight(0xffe2b8,.35,22,2);scene.add(TW.pl)}if(!TW.pool){TW.pool=[];for(let i=0;i<4;i++){const l=new THREE.PointLight(0xff9a48,1.8,42,2);scene.add(l);TW.pool.push(l)}}TW.poolT=0;createBots();toonify(me);for(const b of TW.bots)toonify(b);genTower(1);
-  me.phase='ground';me.pos.copy(TW.spawn);me.netT.copy(me.pos);me.got=true;me.yaw=0;me.pitch=0;me.maxHp=me.hp=isAdmin()?400:200;if(isAdmin()){const dg=gunItem('destroyer');dg.a=99;me.inv[2]=dg}{const g0=gunItem(['pistol_c','smg_c','ar_c','shot_c'][(Math.random()*4)|0]);g0.a=10;me.inv[1]=g0}me.sel=isAdmin()?2:1;me.spdMul=1;TW.maxLives=isAdmin()?10:5;TW.lives=TW.maxLives;$('twHud').style.display='block'}
+  me.phase='ground';me.pos.copy(TW.spawn);me.netT.copy(me.pos);me.got=true;me.yaw=0;me.pitch=0;me.maxHp=me.hp=isAdmin()?400:200;if(isAdmin()){const dg=gunItem('destroyer');me.inv[2]=dg}{const g0=gunItem(['pistol_c','smg_c','ar_c','shot_c'][(Math.random()*4)|0]);me.inv[1]=g0}me.sel=isAdmin()?2:1;me.spdMul=1;TW.maxLives=isAdmin()?10:5;TW.lives=TW.maxLives;$('twHud').style.display='block'}
 function towerMap(){if(TW.rew)return;bigMapOn=!bigMapOn;$('bigMap').style.display=bigMapOn?'block':'none';if(bigMapOn)drawMap($('bigMap'),true)}
 function towerRepair(nm,by){if(!nm||nm.fixed||TW.over||TW.pick)return;nm.fixed=true;nm.lamp.material=bmat('#3aff6a');if(nm.light)nm.light.color.set(0x3aff6a);if(nm.scr){nm.scr.color.set(0x062a10);nm.scr.emissive.set(0x20ff58)}TW.fixed++;try{sfx('unlock')}catch(_){}
   if(TW.fixed>=TW.mach.length){TW.open=true;TW.cd=null;TW.closing=0;TW.reopen=0;remCol(TW.doorCol);TW.doorMesh.visible=false;towerSign('🛗 ELEVATOR READY — step inside!','#7dff9a');bigMsg('✅ All machines repaired! Step into the 🛗 elevator — the doors close 2 minutes after someone steps in (sooner if everyone is inside)!')}
@@ -3753,7 +3753,7 @@ function towerRewardUpdate(dt){const R=TW.rew;R.t+=dt;
   if(R.leave>0){R.leave-=dt;if(R.leave<=0){TW.rew=null;TW.floor++;genTower(TW.floor);me.pos.copy(TW.spawn);me.netT.copy(me.pos);me.vel.set(0,0,0);me.yaw=0;me.pitch=0;bigMsg('🛗 Floor '+TW.floor+' — repair all 6 machines!')}}}
 function towerChoose(k){const R=TW.rew;if(!R||R.chosen)return;R.chosen=true;const f=TW.floor+1;
   if(k==='potion'){me.hp=me.maxHp;if(TW.lives<TW.maxLives)TW.lives++;bigMsg('💊 Health restored!')}
-  else if(k==='gun'){const pool=f<15?['pistol_c','smg_c','ar_c','shot_c']:f<35?['smg_e','shot_e','snip_e','ar_c']:['cannon_e','mini_m','snip_e','smg_e'],id=pool.filter(g=>GUN[g])[(Math.random()*pool.length)|0]||'ar_c';{const gi=gunItem(id);gi.a=10;giveItem(me,gi)}bigMsg('🔫 You got a '+GUN[id].n+'!')}
+  else if(k==='gun'){const pool=f<15?['pistol_c','smg_c','ar_c','shot_c']:f<35?['smg_e','shot_e','snip_e','ar_c']:['cannon_e','mini_m','snip_e','smg_e'],id=pool.filter(g=>GUN[g])[(Math.random()*pool.length)|0]||'ar_c';giveItem(me,gunItem(id));bigMsg('🔫 You got a '+GUN[id].n+'!')}
   else{me.spdMul=3;bigMsg('🏃 3× speed for the next floor!')}}
 function twHide(e,h){if(!h||h.by)return;e.hid=h;h.by=e;e.hidAt=new V3(h.x,0,h.z);e.pos.copy(e.hidAt);if(e.netT)e.netT.copy(e.pos);e.mesh.visible=false;e.vel.set(0,0,0);if(e===me)bigMsg('📦 Hidden! Monsters can\'t see you. Press E to get out.')}
 function twUnhide(e){if(e&&e.hid){const h=e.hid;h.by=null;e.hid=null;e.mesh.visible=true;e.pos.set(h.x,0,h.z+2.2);if(e.netT)e.netT.copy(e.pos);e.vel.set(0,0,0)}}
