@@ -121,6 +121,7 @@ body.touch #game{touch-action:none}
 #tDrop{right:204px;bottom:182px;width:50px;height:50px;font-size:18px}
 #tUp{right:350px;bottom:110px;width:58px;height:58px;font-size:22px}#tDown{right:350px;bottom:40px;width:58px;height:58px;font-size:22px}
 #tHire{right:276px;bottom:40px;width:54px;height:54px;font-size:20px}
+#tEmote{right:276px;bottom:182px;width:54px;height:54px;font-size:20px}#tSummon{right:350px;bottom:182px;width:54px;height:54px;font-size:20px}#tBeam{right:22px;bottom:196px;width:58px;height:58px;font-size:22px}
 #tSquad{right:276px;bottom:110px;width:54px;height:54px;font-size:20px}
 #tAim{right:128px;bottom:98px;width:58px;height:58px}
 #tUse{right:204px;bottom:40px;width:60px;height:60px}
@@ -317,13 +318,16 @@ body.dio .screen{background:linear-gradient(180deg,rgba(12,14,18,.1),rgba(12,14,
   <div class="tb" id="tJump">⤒<small>JUMP</small></div>
   <div class="tb" id="tAim">🎯<small>AIM</small></div>
   <div class="tb" id="tReload">⟳<small>RELOAD</small></div>
-  <div class="tb" id="tUse">✋<small>USE</small></div>
+  <div class="tb" id="tUse">✋<small>PICK UP</small></div>
   <div class="tb" id="tBuild">🔨<small id="tBuildL">BUILD</small></div>
   <div class="tb" id="tDrop">⤓<small>DROP</small></div>
   <div class="tb" id="tHire">🪖<small>HIRE</small></div>
   <div class="tb" id="tUp" style="display:none">▲<small>UP</small></div>
   <div class="tb" id="tDown" style="display:none">▼<small>DOWN</small></div>
   <div class="tb" id="tSquad">🚙<small>SQUAD</small></div>
+  <div class="tb" id="tEmote">💃<small>EMOTE</small></div>
+  <div class="tb" id="tSummon" style="display:none">🌑<small>SUMMON</small></div>
+  <div class="tb" id="tBeam" style="display:none">🛸<small>BEAM</small></div>
 </div>
 <div id="pause">🖱️ Hold &amp; drag to look around · click to shoot</div>
 <div id="endScr" class="overlay"><h2 id="endTitle"></h2><p id="endSub"></p><p id="endStats"></p><p id="endRec" style="font-size:16px"></p><div class="row"><button id="btnAgain">Back to lobby</button></div></div>
@@ -4246,11 +4250,15 @@ tbtn('tDrop',()=>{if(me.phase==='veh')keys.KeyP=true;else dropHeld()},()=>{keys.
 tbtn('tHire',()=>{if(MODE==='tower')towerMap();else if(MODE==='ship')plMap();else if(isAdmin()){if(SHADOW.panel)closeShadowPanel(true);else openShadowPanel()}else tryHire()});
 tbtn('tUp',()=>{keys.KeyU=true},()=>{keys.KeyU=false});tbtn('tDown',()=>{keys.KeyP=true},()=>{keys.KeyP=false});
 tbtn('tSquad',()=>squadCmd());
+tbtn('tEmote',()=>{if(me.alive&&me.phase==='ground')playEmote(me,EMOTES[Math.floor(Math.random()*EMOTES.length)],true)});
+tbtn('tSummon',()=>{if(isAdmin()&&MODE!=='tower'&&MODE!=='ship')toggleShadows()});
+tbtn('tBeam',()=>{keys.KeyB=true},()=>{keys.KeyB=false});
 $('slots').addEventListener('touchstart',e=>{const sl=e.target.closest('.slot');if(!sl||!me||!me.alive)return;e.preventDefault();e.stopPropagation();
   const i=[...$('slots').children].indexOf(sl);if(i>=0){buildType=null;selectSlot(me,i)}},{passive:false});
 setInterval(()=>{if(!TOUCH||!game)return;$('tBuildL').textContent=buildType?buildType.toUpperCase():'BUILD';$('tBuild').classList.toggle('on',!!buildType);
   const it=me&&me.inv[me.sel];$('tFire').firstChild.textContent=buildType?'🧱':it&&it.k==='heal'?'💊':it&&it.k==='pick'?'⛏️':'🔫';
   {const th=$('tHire'),adm=isAdmin();th.innerHTML=MODE==='tower'?'🗺️<small>MAP</small>':adm?'🌑<small>SHADOWS</small>':'🪖<small>HIRE</small>';const fv=me&&me.phase==='veh'&&VEHMAP[me.vehId]&&['heli','ufo'].includes(VEHMAP[me.vehId].type);$('tUp').style.display=$('tDown').style.display=fv?'flex':'none'}
+  {const vv=me&&me.phase==='veh'&&VEHMAP[me.vehId];$('tBeam').style.display=vv&&vv.type==='ufo'?'flex':'none';$('tSummon').style.display=isAdmin()&&MODE!=='tower'&&MODE!=='ship'?'flex':'none'}
   if(me&&me.phase!=='ground')$('tJump').firstChild.textContent='🪂';else $('tJump').firstChild.textContent='⤒'},150);
 (function(){let ret=null;try{ret=JSON.parse(localStorage.getItem('sir_return')||'null');localStorage.removeItem('sir_return')}catch(e){}
   if(!ret||!PNAME)return;if(!pinOk())return;applyControls();if(!SKINS[PSKIN]||!skinUnlocked(PSKIN))PSKIN=0;
